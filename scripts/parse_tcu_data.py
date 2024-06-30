@@ -1,4 +1,5 @@
 import sys
+import os
 import cantools
 
 def process_message(message: str) -> tuple:
@@ -16,10 +17,11 @@ def process_message(message: str) -> tuple:
         return timestamp, id_int, data_hex
 
 def run_script(args):
-    db = cantools.database.load_file('../monitor/data/dbc/2024CAR.dbc')
+    db = cantools.database.load_file('2024CAR.dbc')
     filepath = args[0]
+    fileName = os.path.basename(filepath)
     with open(filepath, 'r') as input_file:
-        with open('signals.txt', 'w') as output_file:
+        with open(fileName.strip('.TXT')+'_parsed.txt', 'w') as output_file:
             with open('skipped.txt', 'w') as skipped_file:
                 for line in input_file:
                     if len(line.strip()) < 17 or 'x' not in line.strip()[:9]:
