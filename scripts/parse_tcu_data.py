@@ -18,7 +18,7 @@ def process_message(message: str) -> tuple:
 
 def run_script(args):
     db = cantools.database.load_file('2024CAR.dbc')
-    filepath = args[0]
+    filepath = args
     fileName = os.path.basename(filepath)
     with open(filepath, 'r') as input_file:
         with open(fileName.strip('.TXT')+'_parsed.txt', 'w') as output_file:
@@ -42,7 +42,20 @@ def run_script(args):
                         output_file.write(f'{timestamp}, {signal}, {decoded_signals[signal]}\n')
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 2 and len(sys.argv) != 3:
         print('Usage: python3 parse_tcu_data.py <path_to_file>')
         sys.exit()
-    run_script(sys.argv[1:])
+    if len(sys.argv) == 3:
+        if sys.argv[2] == "-All":
+            # example: python3 parse_tcu_data.py <pathToFolder> -All
+            folder_path = sys.argv[1]
+            files = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
+
+            # Get the number of files
+            number_of_files = len(files)
+            print(f"Number of files: {number_of_files}")
+            for file_name in files:
+                file_path = os.path.join(folder_path, file_name).replace("\\","/")
+                run_script(file_path)
+    else:
+        run_script(sys.argv[1])
