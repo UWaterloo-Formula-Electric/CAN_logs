@@ -11,12 +11,23 @@ Repo to host CAN logs and post processing scripts
 a.  If possible give the new log a descriptive name ex: "Reid_AMS_fault_3rdRun"  
 4.  to graph the CAN signals Run `python parse_log.py -a <SignalName> graph <pathToLog>`
 
+
+## Signals/Data Available
+Please open scripts/2024CAR.dbc with Visual Studio Code or CANDB++ or Notepad to see what signals are available for viewing
+
 Note: To parse an entire folder of log files, run `python parse_tcu_data.py <pathToFolder> -All`
+
 ## Examples
 Example of parsing a single log file:
 - `python parse_tcu_data.py ../logs/June8Testing/raw/Reid_AMS_Fault_3rdRun.TXT`
 
 Example of parsing an entire folder of log files
 - Example: `python parse_tcu_data.py ../logs/August31Testing/raw -All`
+
+Plotting and creating a CSV of a signal
+- Format: `python filterAndPlot.py <path_to_logFile.txt> <signalName> <createCSV[yes|no]>`
+- Example: `python filterAndPlot.py ../logs/Sept21Testing/parsed/LOGS24_parsed.txt INV_Id yes`
+
+
 ## Help
 Message the #firmware channel for any questions
