@@ -1,0 +1,11 @@
+000003B7, DCU_Heartbeat_dummydata, 0
+000003B7, DCU_Heartbeat_dummydata, 0
+000003B7, DCU_Heartbeat_dummydata, 0
+000003B7, DCU_Heartbeat_dummydata, 0
+000003B7, DCU_Heartbeat_dummydata, 0
+000003B7, DCU_Heartbeat_dummydata, 0
+000003B7, DCU_Heartbeat_dummydata, 0
+000003B7, DCU_Heartbeat_dummydata, 0
+000003B7, DCU_Heartbeat_dummydata, 0
+0000079C, DCU_Heartbeat_dummydata, 0
+0000079C, DCU_Heartbeat_dummydata, 0
