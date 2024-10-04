@@ -63,6 +63,10 @@ BO_ 3221225472 VECTOR__INDEPENDENT_SIG_MSG: 0 Vector__XXX
  SG_ INV_Diag_Run_Faults_Lo : 0|16@1+ (1,0) [0|65535] "" Vector__XXX
  SG_ INV_Diag_Run_Faults_Hi : 0|16@1+ (1,0) [0|65535] "" Vector__XXX
 
+BO_ 2292911106 VCU_INV_Power: 3 VCU_F7
+ SG_ INV_Peak_Tractive_Power_kW : 16|8@1- (1,0) [0|0] ""  VCU_BeagleBone
+ SG_ INV_Tractive_Power_kW : 0|16@1- (0.01,0) [-327.68|327.67] ""  VCU_BeagleBone
+
 BO_ 2343239427 PDU_Car_State: 8 PDU
  SG_ CarStateIsEM : 1|1@1- (1,0) [0|0] ""  DCU,VCU_F7
  SG_ CarStateIsHV : 8|1@1- (1,0) [0|0] ""  DCU,VCU_F7
@@ -790,6 +794,8 @@ BO_ 2550137362 TempCoolantLeft: 8 WSBRL
  SG_ TempInletRadMotorLeft : 0|10@1- (0.25,90) [-38|217.75] "C"  VCU_BeagleBone,VCU_F7
 
 BO_ 2214662151 DCU_buttonEvents: 8 DCU
+ SG_ ButtonScreenNavLeftEnabled : 6|1@1+ (1,0) [0|0] "bool"  VCU_BeagleBone,VCU_F7
+ SG_ ButtonScreenNavRightEnabled : 5|1@1+ (1,0) [0|0] "bool"  VCU_BeagleBone,VCU_F7
  SG_ ButtonEnduranceToggleEnabled : 4|1@1+ (1,0) [0|0] "bool"  VCU_BeagleBone,VCU_F7
  SG_ ButtonEnduranceLapEnabled : 3|1@1+ (1,0) [0|0] "bool"  VCU_BeagleBone,VCU_F7
  SG_ ButtonTCEnabled : 2|1@1+ (1,0) [0|0] "bool"  VCU_BeagleBone,VCU_F7
@@ -930,7 +936,7 @@ BO_ 2365565441 MC_Internal_States: 8 INV
  SG_ INV_Limit_Hot_Spot : 60|1@1+ (1,0) [0|1] ""  VCU_F7
  SG_ INV_Low_Speed_Limiting : 61|1@1+ (1,0) [0|1] ""  VCU_F7
  SG_ INV_Rolling_Counter : 44|4@1+ (1,0) [0|15] ""  VCU_F7
- SG_ INV_Limit_Coolant_Derating : 62|1@1+ (1,0) [0|1] ""  VCU_F7
+ SG_ INV_Limit_Coolant_Derating : 62|1@1+ (1,0) [0|1] ""  VCU_F7,PDU
  SG_ INV_Self_Sensing_Assist_Enable : 33|1@1+ (1,0) [0|1] ""  VCU_F7
  SG_ INV_Limit_Stall_Burst_Model : 63|1@1+ (1,0) [0|1] ""  VCU_F7
  SG_ INV_Burst_Model_Mode : 49|1@1+ (1,0) [0|1] ""  VCU_F7
@@ -955,7 +961,7 @@ BO_ 2365564673 MC_Voltage_Info: 8 INV
  SG_ INV_DC_Bus_Voltage : 0|16@1- (0.1,0) [-3276.8|3276.7] "voltage:V"  VCU_F7
 
 BO_ 2365564417 MC_Current_Info: 8 INV
- SG_ INV_DC_Bus_Current : 48|16@1- (0.1,0) [-3276.8|3276.7] "current:A"  VCU_F7
+ SG_ INV_DC_Bus_Current : 48|16@1- (0.1,0) [-3276.8|3276.7] "current:A"  BMU,VCU_F7
  SG_ INV_Phase_C_Current : 32|16@1- (0.1,0) [-3276.8|3276.7] "current:A"  VCU_F7
  SG_ INV_Phase_B_Current : 16|16@1- (0.1,0) [-3276.8|3276.7] "current:A"  VCU_F7
  SG_ INV_Phase_A_Current : 0|16@1- (0.1,0) [-3276.8|3276.7] "current:A"  VCU_F7
@@ -1028,6 +1034,7 @@ CM_ BU_ WSBRL "10_4_Wheel Sensor Board Rear Left";
 CM_ BU_ WSBRR "11_4_Wheel Sensor Board Rear Right";
 CM_ BU_ ChargeCart "4_3_Charge Cart PCB";
 CM_ BO_ 3221225472 "This is a message for not used signals, created by Vector CANdb++ DBC OLE DB Provider.";
+CM_ SG_ 2292911106 INV_Tractive_Power_kW "Value is in KW (no x10)";
 CM_ BO_ 2147483648 "This is a message for not used signals, created by Vector CANdb++ DBC OLE DB Provider.";
 CM_ BO_ 2550141444 "VERSION";
 CM_ BO_ 2550141441 "VERSION";
