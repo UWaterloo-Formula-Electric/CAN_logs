@@ -2,9 +2,9 @@ import sys
 import os
 import cantools
 
-def process_message(message: str) -> tuple:
+def process_message(message: str, fileName) -> tuple:
     if len(message) < 17 or message[8] != 'x':
-        print('Error: CAN Format seems wrong! Skipping line')
+        print('Error: CAN Format seems wrong in' + fileName + '! Skipping line')
         # sys.exit()
     else:
         timestamp = message[:8]
@@ -41,7 +41,7 @@ def run_script(args):
                         skipped_any = True
                         continue
                     try: 
-                        timestamp, can_id, can_data = process_message(line.strip())
+                        timestamp, can_id, can_data = process_message(line.strip(), fileName)
                     except:
                         print(f"File with wrong format: {parsed_file_path}")
                         print(f"Line: {line}")
