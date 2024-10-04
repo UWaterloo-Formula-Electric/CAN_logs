@@ -44,6 +44,8 @@ def main(input_file, signal_to_plot):
     print(f"input_file: {input_file}")
     print(signal_to_plot)
 
+    signalFound = False
+
     # Process the file
     with open(input_file, mode='r') as infile:
         reader = csv.reader(infile)
@@ -55,6 +57,7 @@ def main(input_file, signal_to_plot):
             # print(f"{signal_name} == {signal_to_plot}")
 
             if signal_name.strip() == signal_to_plot.strip():
+                signalFound = True
                 # Convert the first column (hex time to seconds)
                 time_in_seconds = convert_time_to_seconds(row[0])
                 times.append(time_in_seconds)
@@ -68,6 +71,10 @@ def main(input_file, signal_to_plot):
                     values.append(converted_value)
                 else:
                     values.append(original_value)
+
+        if signalFound is False:
+            print("Signal not found!")
+            sys.exit()
 
     # Write the filtered and converted data to a new CSV file
     if create_csv.strip() == "yes":
