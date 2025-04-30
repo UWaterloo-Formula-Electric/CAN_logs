@@ -1,6 +1,7 @@
 import sys
 import os
 import cantools
+from pathlib import Path
 
 def process_message(message: str, fileName) -> tuple:
     if len(message) < 17 or message[8] != 'x':
@@ -16,22 +17,25 @@ def process_message(message: str, fileName) -> tuple:
         id_int = int(id_hex, 16)
         return timestamp, id_int, data_hex
 
-def run_script(args):
+def run_script(folder_path: Path, filepath: Path):
     db = cantools.database.load_file('2024CAR.dbc')
-    filepath = args
-    fileName = os.path.basename(filepath)
+    fileName = filepath.name
+    print(f"Parsing file: {filepath}")
 
     # Create the directory to store the parsed files
-    output_folder = "parsed_files"
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
+    output_folder = Path("parsed_files")
+    output_folder.mkdir(parents=True, exist_ok=True)
 
     # Flag to track if any lines were skipped
     skipped_any = False
 
-    parsed_file_path = os.path.join(output_folder, fileName.strip('.TXT') + '_parsed.txt')
-    skipped_file_path = os.path.join(output_folder, fileName.strip('.TXT') + '_skipped_lines.txt')
-
+    # keep same dir structure as input folder
+    parsed_file_path = output_folder / filepath.relative_to(folder_path).with_suffix('.csv')
+    skipped_file_path = output_folder / filepath.relative_to(folder_path).with_suffix('.skipped.txt')
+    # print(parsed_file_path)
+    # exit()
+    parsed_file_path.parent.mkdir(parents=True, exist_ok=True)
+    skipped_file_path.parent.mkdir(parents=True, exist_ok=True)
     with open(filepath, 'r') as input_file:
         with open(parsed_file_path, 'w') as output_file:
             with open(skipped_file_path, 'w') as skipped_file:
@@ -80,14 +84,14 @@ if __name__ == '__main__':
     if len(sys.argv) == 3:
         if sys.argv[2] == "-All":
             # example: python3 parse_tcu_data.py <pathToFolder> -All
-            folder_path = sys.argv[1]
-            files = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
+            folder_path = Path(sys.argv[1])
+            files = list(folder_path.rglob('*.TXT'))
 
+            # exit()
             # Get the number of files
             number_of_files = len(files)
             print(f"Number of files: {number_of_files}")
-            for file_name in files:
-                file_path = os.path.join(folder_path, file_name).replace("\\","/")
-                run_script(file_path)
+            for file_path in files:
+                run_script(folder_path, file_path)
     else:
         run_script(sys.argv[1])
