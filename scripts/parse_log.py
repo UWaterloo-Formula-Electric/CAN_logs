@@ -51,8 +51,9 @@ def graph(data, args):
         plt.ylim(top=args.ymax)
     if args.ymin is not None:
         plt.ylim(bottom=args.ymin)
+    plt.grid()
     ax.legend()
-    plt.xlabel("Time")
+    plt.xlabel("Time (s)")
     plt.show()
     
 def main():
