@@ -1,0 +1,95 @@
+import numpy as np
+import pandas as pd
+import argparse
+from pathlib import Path
+import matplotlib.pyplot as plt
+
+from scipy import signal
+
+def lpf(data, cuttoff_freq, btype='lowpass'):
+    sample_rate = 1/(data.index[1] - data.index[0])  # Assuming uniform sampling
+    print(f"Sample rate: {sample_rate}")
+    order = 2
+    sos = signal.butter(order, cuttoff_freq, fs=sample_rate, btype=btype, analog=False, output='sos')
+    filtered_data = signal.sosfiltfilt(sos, data)
+    return filtered_data
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Process CAN log")
+    parser.add_argument('-s', '--src_file', type=Path, help="CAN log file (csv) to be read in")
+    parser.add_argument('-f', '--filter', action=argparse.BooleanOptionalAction,  help="Run the spikey CAN signals through a despiking filter")
+    parser.add_argument('-a', '--add', default=[], action="append", help="CAN signals to be included in analysis (regexed)")
+
+
+    return parser.parse_args()
+
+
+def parse_csv(file_path: Path) -> pd.DataFrame:
+    def parse_data(data: str):
+        try:
+            return float(data)
+        except ValueError:
+            return data
+    df = pd.read_csv(file_path, header=None,
+                     names=['t', 'sig', 'data'], index_col='t',
+                     converters={'t': lambda x: float(int(x, 16)) / 1000, 'data': parse_data})  # convert timestamp in hex to float
+    return df
+
+
+
+# How many samples to run the FBEWMA over.
+SPAN = 10
+
+
+
+def ewma_fb(df_column, span):
+    ''' Apply forwards, backwards exponential weighted moving average (EWMA) to df_column. '''
+    # Forwards EWMA.
+    fwd = df_column.ewm(span=span).mean()
+    # Backwards EWMA.
+    bwd = df_column[::-1].ewm(span=10).mean()
+    # Add and take the mean of the forwards and backwards EWMA.
+    fb_ewma = (fwd + bwd[::-1]) / 2
+    return fb_ewma
+
+
+def unspike(y, N=3):
+    for _ in range(N):
+        std = y.std()
+        mean = y.mean()
+        clipped = y[y.between(mean - std, mean + std)]
+        ewma = ewma_fb(clipped, SPAN)
+
+        c_e = np.abs(clipped - ewma)
+        cutoff = c_e.mean() - c_e.std()
+        rm_outliers = clipped[c_e > cutoff]
+
+        y = rm_outliers.infer_objects(copy=False).interpolate()
+    
+    return y
+
+
+if __name__ == "__main__":
+    # Read the CSV file
+    args = parse_args()
+    df = parse_csv(args.src_file)
+    mask = df['sig'].str.contains('|'.join(args.add), regex=True) if args.add else pd.Series([True] * len(df))
+    df = df[mask]
+
+    # Plotting code can be added here
+    # For example, using matplotlib or seaborn to create visualizations
+
+    for sig in df['sig'].unique():
+        y = df[df['sig'] == sig]['data']
+        if args.filter:
+            unspiked = unspike(y,1)
+            plt.plot(unspiked, marker='.', label=f'{sig}')
+        else:
+            plt.plot(y, marker='.', label=f'{sig}')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Data')
+    plt.title('CAN Signals')
+    plt.grid()
+    plt.legend()
+    plt.show()
