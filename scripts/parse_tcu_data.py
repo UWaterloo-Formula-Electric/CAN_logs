@@ -32,46 +32,44 @@ def run_script(folder_path: Path, filepath: Path):
     # keep same dir structure as input folder
     parsed_file_path = output_folder / filepath.relative_to(folder_path).with_suffix('.csv')
     skipped_file_path = output_folder / filepath.relative_to(folder_path).with_suffix('.skipped.txt')
-    # print(parsed_file_path)
-    # exit()
+
     parsed_file_path.parent.mkdir(parents=True, exist_ok=True)
     skipped_file_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(filepath, 'r') as input_file:
-        with open(parsed_file_path, 'w') as output_file:
-            with open(skipped_file_path, 'w') as skipped_file:
-                for line in input_file:
-                    if len(line.strip()) < 17 or 'x' not in line.strip()[:9]:
-                        skipped_file.write(line)
-                        skipped_any = True
-                        continue
-                    try: 
-                        timestamp, can_id, can_data = process_message(line.strip(), fileName)
-                    except:
-                        print(f"File with wrong format: {parsed_file_path}")
-                        print(f"Line: {line}")
 
-                    if can_id == 218103553:
-                        skipped_file.write(line)
-                        skipped_any = True
-                        continue
+    with open(filepath, 'r') as input_file, open(parsed_file_path, 'w') as output_file, open(skipped_file_path, 'w') as skipped_file:
+        for line in input_file:
+            if len(line.strip()) < 17 or 'x' not in line.strip()[:9]:
+                skipped_file.write(line)
+                skipped_any = True
+                continue
+            try: 
+                timestamp, can_id, can_data = process_message(line.strip(), fileName)
+            except:
+                print(f"File with wrong format: {parsed_file_path}")
+                print(f"Line: {line}")
 
-                    try:
-                        msg = db.get_message_by_frame_id(can_id)
-                    except KeyError:
-                        skipped_file.write(line)
-                        skipped_any = True
-                        continue
+            if can_id == 218103553:
+                skipped_file.write(line)
+                skipped_any = True
+                continue
 
-                    try: 
-                        data_bytes = bytes.fromhex(can_data)
-                        decoded_signals = msg.decode(data_bytes)
-                    except:
-                        skipped_file.write(line)
-                        skipped_any = True
-                        continue
+            try:
+                msg = db.get_message_by_frame_id(can_id)
+            except KeyError:
+                skipped_file.write(line)
+                skipped_any = True
+                continue
 
-                    for signal in decoded_signals:
-                        output_file.write(f'{timestamp}, {signal}, {decoded_signals[signal]}\n')
+            try: 
+                data_bytes = bytes.fromhex(can_data)
+                decoded_signals = msg.decode(data_bytes)
+            except:
+                skipped_file.write(line)
+                skipped_any = True
+                continue
+
+            for signal in decoded_signals:
+                output_file.write(f'{timestamp}, {signal}, {decoded_signals[signal]}\n')
     
     # Check if no lines were skipped and delete the skipped file if it's empty
     if not skipped_any:
@@ -89,8 +87,7 @@ if __name__ == '__main__':
 
             # exit()
             # Get the number of files
-            number_of_files = len(files)
-            print(f"Number of files: {number_of_files}")
+            print(f"Number of files: {len(files)}")
             for file_path in files:
                 run_script(folder_path, file_path)
     else:
