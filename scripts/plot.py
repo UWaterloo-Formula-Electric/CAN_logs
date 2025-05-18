@@ -10,17 +10,18 @@ from scipy import signal
 
 def lpf(data, cuttoff_freq, btype='lowpass'):
     sample_rate = 1/(data.index[1] - data.index[0])  # Assuming uniform sampling
-    print(f"Sample rate: {sample_rate}")
+    cuttoff_freq = min(0.8*sample_rate / 2, cuttoff_freq)  # Nyquist frequency1
+    # print(f"Sample rate: {sample_rate}")
     order = 2
     sos = signal.butter(order, cuttoff_freq, fs=sample_rate, btype=btype, analog=False, output='sos')
     filtered_data = signal.sosfiltfilt(sos, data)
-    return filtered_data
+    return pd.Series(filtered_data, index=data.index, name=data.name)
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Process CAN log")
     parser.add_argument('-s', '--src_file', nargs='?', default=[], action="append", type=Path, help="CAN log file (csv) to be read in")
-    parser.add_argument('-d', '--dir', nargs='?', type=Path, help="Directory containing CAN log files (csv) to be read in")
+    parser.add_argument('-d', '--dir', nargs='?', default=[], action="append", type=Path, help="Directory containing CAN log files (csv) to be read in")
     parser.add_argument('-f', '--filter', action=argparse.BooleanOptionalAction,  help="Run the spikey CAN signals through a despiking filter")
     parser.add_argument('-a', '--add', default=[], action="append", help="CAN signals to be included in analysis")
     parser.add_argument('-r', '--regex', default=[], action="append", help="CAN signals to be included in analysis (regexed)")
@@ -59,7 +60,7 @@ def ewma_fb(df_column, span):
     return fb_ewma
 
 
-def unspike(y, N=3):
+def unspike(y, N=1):
     for _ in range(N):
         std = y.std()
         mean = y.mean()
@@ -79,20 +80,23 @@ if __name__ == "__main__":
     # Read the CSV file
     args = parse_args()
     df = pd.DataFrame()
+    start_time = 0
     if args.src_file:
         for csv_file in args.src_file:
             df = pd.concat([df, parse_csv(csv_file)])
     if args.dir:
-        for csv_file in args.dir.glob("*.csv"):
-            df = pd.concat([df, parse_csv(csv_file)])
+        start_time = df.index[-1] if not df.empty else 0
+        for dir_path in args.dir:
+            for csv_file in dir_path.glob("*.csv"):
+                df = pd.concat([df, parse_csv(csv_file).shift(start_time)])
 
 
-    mask1 = df['sig'].str.contains('|'.join(args.add), regex=True) if args.add else [True] * len(df)
-    # mask2 = df['sig'].str.contains('|'.join(args.regex), regex=True) if args.regex else [True] * len(df)
+    mask1 = df['sig'].str.contains('|'.join(map(lambda x: f"^{x}$", args.add)), regex=True) if args.add else pd.Index([False] * len(df))
+    mask2 = df['sig'].str.contains('|'.join(args.regex), regex=True) if args.regex else pd.Index([False] * len(df))
 
-
-    df = df[mask1]
-   
+    df = df[mask1 | mask2]
+    df.sort_index(inplace=True)
+    
     # Plotting code can be added here
     # For example, using matplotlib or seaborn to create visualizations
     fig, ax = plt.subplots()
@@ -102,6 +106,7 @@ if __name__ == "__main__":
         y = df[df['sig'] == sig]['data']
         if args.filter:
             unspiked = unspike(y,1)
+            # unspiked = lpf(y, 1000)
             line, = ax.plot(unspiked, marker='.', label=f'{sig}')
         else:
             line, = ax.plot(y, marker='.', label=f'{sig}')

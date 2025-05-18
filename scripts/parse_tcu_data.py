@@ -2,6 +2,7 @@ import sys
 import os
 import cantools
 from pathlib import Path
+import concurrent.futures
 
 def process_message(message: str, fileName) -> tuple:
     if len(message) < 17 or message[8] != 'x':
@@ -48,10 +49,10 @@ def run_script(folder_path: Path, filepath: Path):
                 print(f"File with wrong format: {parsed_file_path}")
                 print(f"Line: {line}")
 
-            if can_id == 218103553:
-                skipped_file.write(line)
-                skipped_any = True
-                continue
+            # if can_id == 218103553:
+            #     skipped_file.write(line)
+            #     skipped_any = True
+            #     continue
 
             try:
                 msg = db.get_message_by_frame_id(can_id)
@@ -88,7 +89,8 @@ if __name__ == '__main__':
             # exit()
             # Get the number of files
             print(f"Number of files: {len(files)}")
-            for file_path in files:
-                run_script(folder_path, file_path)
+            with concurrent.futures.ProcessPoolExecutor() as executor:
+                for file_path in files:
+                    executor.submit(run_script, folder_path, file_path)
     else:
         run_script(sys.argv[1])
