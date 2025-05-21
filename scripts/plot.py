@@ -95,6 +95,7 @@ if __name__ == "__main__":
     mask2 = df['sig'].str.contains('|'.join(args.regex), regex=True) if args.regex else pd.Index([False] * len(df))
 
     df = df[mask1 | mask2]
+
     df.sort_index(inplace=True)
     
     # Plotting code can be added here
@@ -113,7 +114,7 @@ if __name__ == "__main__":
         lines.append(line)
         labels.append(sig)
     if args.highlight:
-        cursor = mplcursors.cursor(lines, hover=True, highlight=True)
+        cursor = mplcursors.cursor(lines, hover=mplcursors.HoverMode.Transient)
         # cursor.connect("add", lambda sel: sel.annotation.set_text(labels[sel.index]))
     plt.xlabel('Time (s)')
     plt.ylabel('Data')
