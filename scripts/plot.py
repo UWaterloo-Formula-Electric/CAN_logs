@@ -26,6 +26,7 @@ def parse_args():
     parser.add_argument('-a', '--add', default=[], action="append", help="CAN signals to be included in analysis")
     parser.add_argument('-r', '--regex', default=[], action="append", help="CAN signals to be included in analysis (regexed)")
     parser.add_argument('-i', '--highlight',  action=argparse.BooleanOptionalAction, help="Highlight on hover")
+    parser.add_argument('-n', '--inv-fault', action=argparse.BooleanOptionalAction, help="Plot the inverter fault output")
 
 
     return parser.parse_args()
@@ -37,9 +38,16 @@ def parse_csv(file_path: Path) -> pd.DataFrame:
             return float(data)
         except ValueError:
             return data
+        
+    def parse_time(t):
+        if "." in str(t):
+            return float(t)
+        else:
+            return float(int(t, 16)) / 1000
     df = pd.read_csv(file_path, header=None,
                      names=['t', 'sig', 'data'], index_col='t',
-                     converters={'t': lambda x: float(int(x, 16)) / 1000, 'sig': lambda x: x.strip(), 'data': parse_data})  # convert timestamp in hex to float
+                    #  converters={'t': lambda x: float(int(x, 16)) / 1000, 'sig': lambda x: x.strip(), 'data': parse_data})  # convert timestamp in hex to float
+                     converters={'t': parse_time, 'sig': lambda x: x.strip(), 'data': parse_data})  # convert timestamp in hex to float
     return df
 
 
@@ -90,11 +98,20 @@ if __name__ == "__main__":
             for csv_file in dir_path.glob("*.csv"):
                 df = pd.concat([df, parse_csv(csv_file).shift(start_time)])
 
+    if args.inv_fault:
+        # Add inverter fault output
+        args.add.append('INV_Post_Fault_Hi')
+        args.add.append('INV_Post_Fault_Lo')
+        args.add.append('INV_Run_Fault_Hi')
+        args.add.append('INV_Run_Fault_Lo')
+        
+
 
     mask1 = df['sig'].str.contains('|'.join(map(lambda x: f"^{x}$", args.add)), regex=True) if args.add else pd.Index([False] * len(df))
     mask2 = df['sig'].str.contains('|'.join(args.regex), regex=True) if args.regex else pd.Index([False] * len(df))
 
     df = df[mask1 | mask2]
+
 
     df.sort_index(inplace=True)
     
@@ -113,6 +130,8 @@ if __name__ == "__main__":
             line, = ax.plot(y, marker='.', label=f'{sig}')
         lines.append(line)
         labels.append(sig)
+
+
     if args.highlight:
         cursor = mplcursors.cursor(lines, hover=mplcursors.HoverMode.Transient)
         # cursor.connect("add", lambda sel: sel.annotation.set_text(labels[sel.index]))

@@ -9,7 +9,7 @@ def process_message(message: str, fileName) -> tuple:
         print('Error: CAN Format seems wrong in' + fileName + '! Skipping line')
         # sys.exit()
     else:
-        timestamp = message[:8]
+        timestamp = float(int(message[:8], 16)) / 1000
         clean_hex = message[9:]
 
         id_hex = clean_hex[:8]
@@ -89,6 +89,9 @@ if __name__ == '__main__':
             # exit()
             # Get the number of files
             print(f"Number of files: {len(files)}")
+            # for file_path in files:
+            #     print(f"Processing file: {file_path}")
+            #     run_script(folder_path, file_path)
             with concurrent.futures.ProcessPoolExecutor() as executor:
                 for file_path in files:
                     executor.submit(run_script, folder_path, file_path)
