@@ -83,6 +83,13 @@ def unspike(y, N=1):
     
     return y
 
+WHEEL_DIAMETER_M = 16 * 2.54 / 100
+GEAR_RATIO_MOT_TO_WHEEL = 4
+WHEEL_CIRCUMFRENCE = WHEEL_DIAMETER_M * np.pi
+M_TO_KM = 1000
+MIN_PER_HR = 60
+
+RPM_TO_KPH = (WHEEL_CIRCUMFRENCE / GEAR_RATIO_MOT_TO_WHEEL) / M_TO_KM * MIN_PER_HR
 
 if __name__ == "__main__":
     # Read the CSV file
@@ -120,8 +127,11 @@ if __name__ == "__main__":
     fig, ax = plt.subplots()
     lines = []
     labels = []
-    for sig in df['sig'].unique():
+    for sig in sorted(df['sig'].unique()):
         y = df[df['sig'] == sig]['data']
+        if sig == 'INV_Motor_Speed':
+            y = y * RPM_TO_KPH
+            sig = 'INV_Motor_Speed (kph)'
         if args.filter:
             unspiked = unspike(y,1)
             # unspiked = lpf(y, 1000)
